@@ -1,29 +1,34 @@
-# my global config
-global:
-  scrape_interval:     15s
-  evaluation_interval: 15s
-  # scrape_timeout is set to the global default (10s).
+# A example scrape configuration for running Prometheus with
+# Linode.
 
-# Alertmanager configuration
+scrape_configs:
+  # Make Prometheus scrape itself for metrics.
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # Discover Node Exporter instances to scrape.
+  - job_name: "node"
+    linode_sd_configs:
+      - authorization:
+          credentials: "54bf07a3b9df8c304b29d6d466ad31c19222b12885b74e101929ec0d81dbe543"
+    relabel_configs:
+      # Only scrape targets that have a tag 'monitoring'.
+      - source_labels: [__meta_linode_tags]
+        regex: ".*,monitoring,.*"
+        action: keep
+
+      # Use the public IPv6 address and port 9100 to scrape the target.
+      - source_labels: [__meta_linode_public_ipv4]
+        target_label: __address__
+        replacement: "[$1]:9100"
+
+# Define alerting rules
+rule_files:
+  - "custom.rules"  # Name of the file containing alerting rules
+
+# Define Alertmanager configuration
 alerting:
   alertmanagers:
     - static_configs:
-      - targets:
-        - alertmanager:9093
-
-# Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
-rule_files:
-    - "/etc/prometheus/custom.rules"
-  # - "second_rules.yml"
-
-# A scrape configuration containing exactly one endpoint to scrape:
-# Here it's Prometheus itself.
-scrape_configs:
-  # The job name is added as a label to any time series scraped from this config.
-  - job_name: 'prometheus'
-    static_configs:
-      - targets: ['localhost:9090']
-
-  - job_name: 'node_exporter'
-    static_configs:
-      - targets: ['localhost:9100', '192.46.214.229:9100', '172.104.206.176:9100']
+        - targets: ["localhost:9093"]  # Alertmanager's target address

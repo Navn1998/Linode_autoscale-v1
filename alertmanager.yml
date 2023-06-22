@@ -12,7 +12,7 @@ route:
 receivers:
 - name: 'executor'
   webhook_configs:
-  - url: 'http://172.232.66.49:9099/receive'
+  - url: 'http://<'IP_address of prometheus-am-executor'>:9099/receive'
     send_resolved: false
 inhibit_rules:
   - source_match:
